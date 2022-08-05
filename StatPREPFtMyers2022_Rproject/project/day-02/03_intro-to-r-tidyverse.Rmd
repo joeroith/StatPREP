@@ -1,0 +1,261 @@
+---
+title: "Introduction to R"
+subtitle: "Data wrangling and visualizations using the tidyverse"
+author: "Maria Tackett"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, 
+                    warning = TRUE, 
+                    message = TRUE)
+```
+
+## Visual Editor
+
+-   R meets Microsoft Word (or your favorite word processor)
+-   Use point-and-click, keyboard shortcuts, or Markdown syntax to write and format your R Markdown document
+-   Use "Ctrl /" (PC) or "command /" (Mac) to insert anything.
+
+Find resources about the visual editor in the [Learn more] section.
+
+> 💻 **Feel free to try out some of the functionality of the visual editor and add your own notes to the document throughout the session!**
+
+## Tidyverse
+
+-   The **tidyverse** is a collection of R packages designed for data science.
+-   The packages "share a common philosophy of data and R programming, and are designed to work together naturally." - *R for Data Science*
+-   Many packages are part of the tidyverse. Run the code below to load the core packages in the tidyverse.
+
+```{r load-packages}
+library(tidyverse)
+```
+
+> ⚠️ **Running code in the console is [not]{.underline} the same knitting an R Markdown document**
+
+## Data: Palmer penguins
+
+The data for this analysis is *penguins* data set from the [**palmerpenguins** R package](https://allisonhorst.github.io/palmerpenguins/) maintained by Dr. Allison Horst. This data set contains measurements and other characteristics penguins observed near Palmer Station in Antarctica. The data were originally collected by Dr. Kristen Gorman.
+
+This analysis focuses on the following variables:
+
+-   **species**: penguins species - Adelie, Gentoo, Chinstrap
+-   **island**: Island where recorded - Biscoe, Dream, Torgersen
+-   **flipper_length_mm**: Flipper length in millimeters (mm)
+-   **bill_length_mm:** Bill length in millimeters (mm)
+
+```{r load-data-package}
+library(palmerpenguins)
+```
+
+The goal of the analysis is to use summary statistics and visualizations to compare the flipper length of penguins from the three species.
+
+![Artwork by \@allison_horst](images/palmer-penguins.png){width="1800"}
+
+## Take a look at the data
+
+There are two primary ways to view the data:
+
+-   Click on the data set in the *Environment* pane to see the full data set in the viewer.
+
+-   Use the `glimpse()` function to get a quick overview of the data set
+
+    ```{r glimpse-data}
+    glimpse(penguins)
+    ```
+
+## Data wrangling
+
+There are a lot of observations in the penguins data frame.
+
+Let's see how many penguins in the data are from each species.
+
+```{r count-species}
+penguins %>%
+  count(species)
+```
+
+### The pipe
+
+Before looking at more data wrangling functions, let's introduce the pipe. The **pipe,** `%>%`, is used to pass information from one function to another in the tidyverse. The pipe passes the output of the previous line of code as the first input of the next line of code.
+
+When reading code aloud in English, say "and then" whenever you see a pipe. Below is a pipeline describing a typical morning.
+
+    find("keys") %>%
+      start_car() %>%
+      drive(to = "work") %>%
+      park()
+
+### Data wrangling using `dplyr`
+
+**dplyr** is the primary package in the tidyverse for data wrangling. You can perform actions by row, by column, or by groups of rows.
+
+**Actions by row**
+
+-   `filter()`: chooses rows based on column values
+-   `slice()`: chooses rows based on location
+-   `arrange()`: changes the order of the rows
+-   `sample_n()`: take a random subset of the rows
+
+**Actions by column**
+
+-   `select()`: changes whether or not a column is included
+-   `rename()`: changes the name of columns
+-   `mutate()`: changes the values of columns and creates new columns
+
+**Actions for groups of rows**
+
+-   `summarise()`: collapses a group into a single row
+-   `count()`: count unique values of one or more variables
+-   `group_by()`: perform calculations separately for each value of a variable
+
+### Calculate summary statistics
+
+Let's take a look at the mean and median of flipper length.
+
+```{r summary-stats}
+penguins %>%
+  summarise(mean = mean(flipper_length_mm), 
+            median = median(flipper_length_mm))
+```
+
+1.  ⚠️ The summary statistics are not what we expected. What happened? Let's update the code chunk above using only eligible penguins.
+
+```{r summary-stats-pt2}
+penguins %>%
+   summarise(mean = mean(flipper_length_mm), 
+            median = median(flipper_length_mm))
+```
+
+2.  Now calculate the mean and median separately for each species. Which function is used to calculate summary statistics for each species?
+
+```{r summary-by-species}
+penguins %>%
+   summarise(mean = mean(flipper_length_mm), 
+            median = median(flipper_length_mm))
+```
+
+> **Your turn!** Calculate 2 -3 other summary statistics. [Click here](https://dplyr.tidyverse.org/reference/summarise.html#useful-functions) for a list of functions that can be used in `summarise`. Calculate the summary statistics across all species and separately for each species.
+
+```{r summary-your-turn}
+# add your code here
+```
+
+## Data visualization
+
+We now have a table of statistics that can be used to compare the species, but sometimes it's easier to compare using visualizations.
+
+**ggplot2** is the package in the tidyverse used for visualization. Below is an outline of typical code in ggplot2.
+
+    ggplot(data = [dataset], aes(x = [x-var], y = [y-var])) +
+      geom_xx() + 
+      other options
+
+1.  Fill in blanks to make side-by-side boxplots of the distribution of flipper length for each species. Then, make `eval = TRUE` in the code option to make the code in this chunk execute when the document is knit.
+
+```{r boxplots}
+#| eval = FALSE 
+
+ggplot(data = penguins, aes(x = ___, y = ___)) +  
+  ____() + 
+  labs(x = "Species", 
+       y = "Flipper length in mm", 
+       title = "Flipper length by species")
+```
+
+2.  What are 1 - 2 observations from the plot?
+
+Now let's visualize the distribution of flipper length by species for each island. To do so, we will make the following updates:
+
+-   Use the `facet_wrap()` function to facet the graph by island.
+
+-   Use the `fill` argument to fill in the color of the boxes based on species.
+
+```{r boxplots-by-island}
+ggplot(data = penguins, aes(x = species, y = flipper_length_mm, fill = species)) + 
+  geom_boxplot() + 
+  labs(x = "Species", 
+       y = "Flipper length in mm", 
+       title = "Flipper length by species") + 
+  guides(fill = "none") +
+  facet_wrap(~ island)
+```
+
+3.  What is a new observation in this plot that was not apparent before?
+
+### ggplot2 aesthetics
+
+We can add **aesthetics** (features) to the plot to incorporate additional variables or to customize the plot. These aesthetics include
+
+-   color
+-   shape
+-   size
+-   alpha (transparency): ranges from 0 (most transparent) to 1 (most opaque; the default)
+
+Below is a scatterplot of flipper length and bill length.
+
+```{r scatterplot}
+ggplot(data = penguins, aes(x = flipper_length_mm, y = bill_length_mm)) + 
+  geom_point() + 
+  labs(x = "Flipper length in mm", 
+       y = "Bill length in mm", 
+       title = "Bill length versus flipper length",
+       subtitle = "of penguins at Palmer Station")
+```
+
+There are two ways to add aesthetics to a plot.
+
+1.  Use the same aesthetic for all observations. These are defined in the `geom` and outside of `aes()`.
+
+Update the code below to make all points on the scatterplot blue.
+
+```{r scatterplot-blue}
+ggplot(data = penguins, aes(x = flipper_length_mm, y = bill_length_mm)) + 
+  geom_point() + 
+  labs(x = "Flipper length in mm", 
+       y = "Bill length in mm", 
+       title = "Bill length versus flipper length",
+       subtitle = "of penguins at Palmer Station")
+```
+
+2.  The aesthetic is based on the value of a variable. These are defined inside of `aes()`.
+
+Update the code below to color the points on the scatterplot based on the species.
+
+```{r scatterplot-species}
+ggplot(data = penguins, aes(x = flipper_length_mm, y = bill_length_mm)) + 
+  geom_point() + 
+  labs(x = "Flipper length in mm", 
+       y = "Bill length in mm", 
+       title = "Bill length versus flipper length",
+       subtitle = "of penguins at Palmer Station")
+```
+
+> 💻 **Your turn!** Modify the code to create a multivariate visualization using aesthetics. Try different aesthetic mappings and/or new variables. [Click here](https://r4ds.had.co.nz/data-visualisation.html#aesthetic-mappings) to learn more about aesthetic mappings.
+
+```{r scatterplot-your-turn}
+ggplot(data = penguins, aes(x = flipper_length_mm, y = bill_length_mm)) + 
+  geom_point() + 
+  labs(x = "Flipper length in mm", 
+       y = "Bill length in mm", 
+       title = "Bill length versus flipper length",
+       subtitle = "of penguins at Palmer Station")
+```
+
+## Learn more
+
+-   Tidyverse
+    -   [R for Data Science](https://r4ds.had.co.nz/) by Hadley Wickham and Garrett Grolemund
+    -   [tidyverse.org/learn](https://www.tidyverse.org/learn/)
+    -   [ggplot2 reference](https://ggplot2.tidyverse.org/)
+    -   [dplyr reference](https://dplyr.tidyverse.org/)
+-   Visual editor
+    -   [Visual R Markdown](https://rstudio.github.io/visual-markdown-editing/) blog post
+    -   [Exploring RStudio's Visual Markdown Editor](https://www.rstudio.com/blog/exploring-rstudio-visual-markdown-editor/)
+-   Teaching data science
+    -   [Data Science in a Box](https://datasciencebox.org/) by Mine Çetinkaya-Rundel
+
+------------------------------------------------------------------------
+
+*This document was written by [Maria Tackett](https://mariatackett.net) with inspiration from materials in [Data Science in a Box](https://datasciencebox.org).*

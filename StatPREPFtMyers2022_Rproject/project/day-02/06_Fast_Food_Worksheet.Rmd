@@ -1,0 +1,126 @@
+---
+title: "Correlation and Regression"
+subtitle: "StatPREP worksheet example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+knitr::opts_chunk$set(echo = FALSE)
+
+fast_food <- read_csv("https://raw.githubusercontent.com/joeroith/Data/master/Nutritional_Data_for_Fast_Food_2017.csv")
+```
+
+## Fast Food Nutrition
+
+### Background and Data
+
+Most of the calories in food come from fats, carbohydrates, and proteins.
+
+The dataset was collected in January of 2017 by looking through online nutritional information provided by fast food restaurant chains. Nutrition data on various burgers, a breaded chicken sandwich, a grilled chicken sandwich, chicken nuggets, french fries, and a chocolate milkshake were collected for each restaurant (when applicable). For each chain the smallest hamburger, the smallest cheeseburger, and a variety of their most well known larger burgers were selected.
+
+```{r}
+fast_food
+
+# variable names
+names(fast_food)
+```
+
+## Plot the Data
+
+Make a scatterplot of the number of calories in a fast food item versus how many grams of carbohydrates it contains.
+
+```{r plot}
+ggplot(data = __________, mapping = aes(x = _______, y = _______)) +
+  geom_point() +
+  labs(title = "...")
+```
+
+```{r plot-hint}
+ggplot(data = fast_food, mapping = aes(x = carbs, y = calories)) +
+  geom_point() +
+  labs(title = "A scatterplot of Carbs (g) vs. Calories")
+```
+
+#### Question 1
+
+Does there appear to be a relationship between the two variables?
+
+## Summarize the Data
+
+Find the summary statistics for `calories` and `carbs`. Be sure to find means, standard deviations, and the correlation coefficient.
+
+```{r summary}
+fast_food %>%
+  summarize(...)
+```
+
+```{r summary-hint}
+fast_food %>%
+  summarize(cal_mean = mean(calories),
+            cal_sd = sd(calories),
+            carb_mean = mean(carbs),
+            carb_sd = sd(carbs),
+            correlation = cor(calories, carbs)
+  )
+
+# You could also use df_stats()
+```
+
+#### Question 2
+
+Make a statement about the strength and direction of the relationship between Calories and Carbohydrates.
+
+## Least-squares Regression
+
+### Simple regression
+
+Find the intercept and the slope of the least-squares regression line for `calories` vs. `carbs`.
+
+```{r olsr, exercise = TRUE}
+model <- lm(_____ ~ ______, data = ______)
+```
+
+```{r olsr-hint}
+model <- lm(calories ~ carbs, data = fast_food)
+summary(model)
+```
+
+#### Question 3
+
+What is the correct interpretation of the intercept of the least-squares regression line?
+
+#### Question 4
+
+What is the correct interpretation of the slope of the least-squares regression line?
+
+## BONUS: Explore through Regression
+
+### Sodium vs. Sugar
+
+Create a scatterplot of `sodium` and `sugar`.
+
+```{r plot2, exercise = TRUE}
+ggplot(data = _______, mapping = aes(x = _______, y = ________)) +
+  geom_?
+```
+
+```{r plot2-hint}
+ggplot(data = fast_food, mapping = aes(x = sodium, y = sugars)) +
+  geom_point() +
+  labs(title = "Scatterplot of Sodium (mg) vs. Sugars (g)")
+```
+
+There seems to be a cluster of points throwing off our pattern. Create a new scatterplot and color the points based on `type` of fast-food item. (Add regression lines and facet the plots if you wish as well.)
+
+```{r plot3, exercise = TRUE}
+
+```
+
+```{r plot3-hint}
+ggplot(data = fast_food, mapping = aes(x = sodium, y = sugars, color = type)) +
+  facet_wrap(~ type) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```

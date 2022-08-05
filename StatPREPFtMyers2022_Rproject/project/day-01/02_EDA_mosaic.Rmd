@@ -1,0 +1,234 @@
+---
+title: "Using the mosaic package"
+subtitle: "StatPREP Fort Myers Workshop 2022"
+author: "Kathryn Kozak"
+date: "5/20/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mosaic)
+library(NHANES)
+library(mosaicData)
+data_NHANES<-NHANES
+no_NA_diabetes<-data_NHANES[!is.na(data_NHANES$Diabetes),]
+no_NA_education<-data_NHANES[!is.na(data_NHANES$Education),]
+```
+
+## Reading in datasets
+
+Reading in a dataset:
+
+```{r}
+births_2015<-Births2015 #reads a built in dataset into the global environment
+```
+
+```{r}
+Affairs<-read.csv("/cloud/project/data/Affairs.csv") #this dataset is uploaded into your files
+```
+
+```{r}
+Wages<- read.csv("https://krkozak.github.io/MAT160/wages.csv") #Using github to store dataset
+```
+
+It helps to know what variables the dataset contains. This command will display the names of the variables in the dataset.
+
+```{r}
+names(data_NHANES)
+```
+
+IF you want to look at the dataset
+
+```{r}
+View(data_NHANES)
+```
+
+Sometimes you want to just look at the structure of the dataset, so it is helpful to look at the first 6 rows of a dataset using this command
+
+```{r}
+head(data_NHANES)
+```
+
+To see the code book on a dataset from a package:
+
+```{r}
+?NHANES
+```
+
+##mosaic Package
+
+R has packages that can be installed with datasets such as mosaicData, NHANES, gapminder, fivethirtyeight, and many others.
+
+The package mosaic also is a package that makes some graphs and data commands easy to compute. This session will explore some commands in the mosaic package using the NHANES dataset.
+
+##Categorical Data
+
+Make a bar chart of a categorical variable.
+
+```{r}
+gf_bar(~Race1, data=data_NHANES)
+```
+
+Sometime is it useful to have the bar graph be horizontal.
+
+```{r}
+gf_barh(~Race1, data=data_NHANES)
+```
+
+We can add a title, color, subtitle, and x and y labels
+
+```{r}
+gf_bar(~Race1, data=data_NHANES, title="Race of people who live in the US", fill="purple", xlab="Race", ylab="Number of People")
+```
+
+If you would rather have proportions instead of count:
+
+```{r}
+gf_props(~Race1, data=data_NHANES, title="Race of people who live in the US", fill="purple", xlab="Race", ylab="Proportion of People")
+```
+
+Suppose you want to facet by a categorical variable and display as a stacked bar graph:
+
+```{r}
+gf_bar(~Race1, data=no_NA_education, title="Race of people who live in the US", subtitle = "Education Level", fill=~Education, xlab="Race", ylab="Number of People")
+```
+
+Display as side by side bars:
+
+```{r}
+gf_bar(~Race1, data=no_NA_education, title="Race of people who live in the US", subtitle = "Education Level", fill=~Education, position=position_dodge(), xlab="Race", ylab="Number of People")
+```
+
+Creating a Pareto Chart, to go from highest to lowest
+
+```{r}
+gf_props(~reorder(Race1,Race1,function(Race1)-length(Race1)), data=data_NHANES, title="Race of people who live in the US", fill="purple", xlab="Race", ylab="Proportion of People")
+```
+
+## Quantitative Data
+
+To make a histogram of a qualitative variable.
+
+```{r, warning=FALSE}
+gf_histogram(~TotChol, data=data_NHANES, title = "Total Cholesterol of people in US", fill="blue", color="red")
+```
+
+To make a histogram of a qualitative variable faceted by a categorical variable.
+
+```{r, warning=FALSE}
+gf_histogram(~TotChol|Diabetes, data=no_NA_diabetes, title = "Total Cholesterol of people in US", subtitle = "Person has Diabetes", fill="blue", color="red")
+```
+
+To make a density graph of a quantitative variable.
+
+```{r, warning=FALSE}
+gf_density(~TotChol|Diabetes, data=no_NA_diabetes,title = "Total Cholesterol of people in US", fill="blue")
+```
+
+```{r, warning=FALSE}
+gf_density(~TotChol, data=no_NA_diabetes, title = "Total Cholesterol of people in US", fill=~Diabetes)
+```
+
+```{r, warning=FALSE}
+gf_density(~BPSysAve, data=data_NHANES, fill="purple", title="Blood Pressure", subtitle = "Purple=systolic, and Blue=diastolic")%>%
+  gf_density(~BPDiaAve, data=data_NHANES, fill="blue")
+```
+
+## Scatterplot and Time Series graphs
+
+Scatterplot of two quantitative variables
+
+```{r}
+gf_point(length~width, data=KidsFeet, title="Length versus Width of Kids longer foot")
+```
+
+```{r}
+gf_point(length~width, data=KidsFeet, color=~domhand, title="Length versus Width of Kids longer foot")
+```
+
+Make a scatter plot for number of births each day of the year in 2015 in US.
+
+```{r}
+gf_point(births~date, data=Births2015, title="Number of Births in 2015")
+```
+
+```{r}
+gf_point(births~date, data=Births2015, title="Number of Births in 2015", subtitle="Day of the Week", color=~wday)
+```
+
+Create a time series graph for the time in seconds of the 100 m swimming world record faceted by sex.
+
+```{r}
+gf_line(time~year, data=SwimRecords, title="temperature", color=~sex)
+```
+
+## Statistics
+
+Finding the mean, median, variance, standard deviation, range, and five-number summary of a dataset
+
+```{r}
+help(SaratogaHouses)
+```
+
+```{r}
+df_stats(~price, data=SaratogaHouses, mean)
+```
+
+Faceted by a categorical variable
+
+```{r}
+df_stats(~price|bedrooms, data=SaratogaHouses, mean)
+```
+
+boxplots
+
+```{r}
+gf_boxplot(~price|bedrooms, data=SaratogaHouses, title="Prices of Houses Separated by Number of Bedrooms")
+```
+
+##Inference
+
+Hypothesis tests and confidence intervals are computed using the same commands.
+
+Proportion test
+
+```{r}
+prop.test(outcome~smoker, data=Whickham) #example of survival status whether smoker
+```
+
+If want a one-sided test:
+
+```{r}
+prop.test(outcome~smoker, data=Whickham, alternative="less") #example of survival status whether smoker
+```
+
+A one sample test of the mean:
+
+```{r}
+t.test(~alcohol, mu=9.87, data=Alcohol) #comparing the number of liters drunk around the world to US average in 2018 of 9.87 Liters per day.
+```
+
+two sample independent test of the difference in means:
+
+```{r}
+t.test(age~smoker, data=Whickham) #comparing the age of a person and whether the person smokes or does
+```
+
+For a paired sample test, you need to create a difference variable using the mutate command.
+
+linear regression:
+
+```{r}
+lm(length~width, data=KidsFeet) #creates a linear model for the length of a kids feet versus the weidth
+```
+
+```{r}
+gf_point(length~width, data=KidsFeet, title="Length versus Width of Kids longer foot")%>%
+gf_lm()
+```
+
+```{r}
+lm.out<-lm(length~width, data=KidsFeet) #saves the linear model to the variable lm.out
+summary(lm.out) #displays summary information about the linear model lm.out
+```

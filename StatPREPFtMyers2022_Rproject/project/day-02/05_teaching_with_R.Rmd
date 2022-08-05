@@ -1,0 +1,107 @@
+---
+title: "Day 2 - Breakout Session #2"
+subtitle: "StatPREP Fort Myers Workshop 2022"
+output: html_document
+---
+
+```{r setup}
+library(tidyverse)
+library(infer)
+```
+
+## Creating a Lesson in RStudio
+
+Now we want to turn things over to you. How would you create a lesson or activity for your classroom? We're going to get into small groups that will each create a short worksheet using this R Markdown file as a starting point. To get the ball rolling, we've created this skeleton document and provided a few suggestions. We've also included a couple datasets to work with. But feel free to make it your own and go off script!
+
+You can all work together on the same computer and have a main copy, or you can edit your own version and customize it for your class. But be prepared to share one version with everyone at the end of the session.
+
+Don't worry about the R code too much, we'll be walking around to help out. But think of things you would *like* to do in R. Keep it simple for your students and feel free to write partial code for them to complete like below.
+
+```{r example-ggplot, eval = FALSE}
+# Fill in the blanks to create a scatterplot of the data
+ggplot(data = ______, aes(x = ________, y = _______)) +
+  geom_point() +
+  labs(title = "____________")
+```
+
+If you are really stuck, see the `06_Fast_Food_Worksheet.Rmd` for some inspiration.
+
+------------------------------------------------------------------------
+
+## The data
+
+Choose between the following datasets to use for your worksheet.
+
+-   Dataset #1 `jeans`: In 2018, the website *The Pudding* published an award-winning visual essay called [Women's pockets are Inferior](https://pudding.cool/2018/08/pockets/). Explore jeans prices, styles, and pocket sizes in this fun dataset. See [this website](https://github.com/the-pudding/data/tree/master/pockets) for more information about the variables.
+
+```{r load-jeans}
+#jeans <- read_csv("https://raw.githubusercontent.com/joeroith/Data/master/measurements_jeans.csv")
+
+jeans <- read_csv("/cloud/project/data/measurements_jeans.csv")
+View(jeans)
+
+```
+
+-   Dataset #2 `fast_food`: Collected in January of 2017 by looking through online nutritional information provided by fast food restaurant chains. Nutrition data on various burgers, a breaded chicken sandwich, a grilled chicken sandwich, chicken nuggets, french fries, and a chocolate milkshake were collected for each restaurant (when applicable). For each chain the smallest hamburger, the smallest cheeseburger, and a variety of their most well known larger burgers were selected.
+
+```{r load-fastfood}
+#fast_food <- read_csv("https://raw.githubusercontent.com/joeroith/Data/master/Nutritional_Data_for_Fast_Food_2017.csv")
+
+fast_food <- read_csv("/cloud/project/data/Nutritional_Data_for_Fast_Food_2017.csv")
+View(fast_food)
+```
+
+------------------------------------------------------------------------
+
+## Intended Learning Outcomes and Goal
+
+Before you start, identify 1-2 main learning outcomes for your worksheet. What concepts do you want your students to practice or understand? Keep them simple and realistic.
+
+-   **Learning Outcome #1:** ...
+
+-   **Learning Outcome #2:** ...
+
+Now, what is the goal or research question you would like your students to focus on? Be specific, something like *Does penguin size (flipper length, bill length, and body mass) differ from island to island?* (from the Palmer Penguin dataset earlier).
+
+-   **Research Question:** ...
+
+------------------------------------------------------------------------
+
+## Explore the data
+
+*Write a little background about the data and the question your students are to explore. The first thing we will want them to do is explore the variables you've identified in your research question. Think about how you want them to summarize the data numerically. How should they visualize the data? What sort of questions would you ask them about these summaries? What should they be looking for?*
+
+#### Question 1
+
+*Maybe this is something about the variable types (numeric vs. categorical)? Or about which variable is the response (dependent) and the explanatory (independent).*
+
+*Partial code can be written to prompt your students, or you can give them the code so they focus on the interpretations.*
+
+```{r code-for-Q1}
+# Use comments to guide students or explain tricky code syntax
+```
+
+#### Question 2
+
+*Is there a specific numeric summary or table you'd like them to create and interpret? For individual variables or trends between variables?*
+
+*Break up code chunks so it's clear we're moving on to a separate task.*
+
+```{r code-for-Q2}
+# Maybe this is visualization code
+```
+
+#### Question 3
+
+*What sort of patterns can you see in your data? What stands out as different or similar?*
+
+#### Question 4
+
+*Feel free to add more questions about exploring the data, or try some inferential questions. Remember, R is fancy, but can still act like a calculator. With a few summary statistics, your students can calculate test statistics, confidence intervals, or anything like that "by hand".*
+
+```{r code-for-Q4}
+# Create and interpret a 95% confidence interval
+xbar <- ______
+samp_sd <- _____
+n <- _____
+```

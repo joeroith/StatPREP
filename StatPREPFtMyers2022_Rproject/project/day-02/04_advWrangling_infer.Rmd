@@ -1,0 +1,266 @@
+---
+title: "Advanced Data Wrangling and Infer Package"
+subtitle: "StatPREP Fort Myers Workshop 2022"
+author: "Joe Roith"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+## Setting things up
+
+We need to load libraries and read the data into R first.
+
+```{r setup, include=FALSE}
+# Don't forget to load your libraries
+library(tidyverse)
+library(palmerpenguins)
+
+# Load data table from the palmerpenguins package
+data("penguins")
+```
+
+It's always a good idea to do some recon work first. What do the data look like? How many observations and variables do we have? What are the variable names?
+
+```{r view-data}
+# View() opens the data in another window. 'glimpse(penguins)' will show
+#  the first few rows.
+View(penguins)
+
+# If data come from a package, you can get the help documentation this way
+?penguins
+
+dim(penguins)     # dimension: always rows x columns
+names(penguins)   # good way to keep track of variable names for later use
+```
+
+------------------------------------------------------------------------
+
+## Basic Wrangling "Verbs"
+
+Manipulating data to fit the shape or form that we need for a particular task is often referred to as *wrangling*. The basic forms of wrangling data usually fall into two categories: isolating data and deriving information.
+
+-   Isolating data
+
+    -   `filter`: Reduce the number of rows
+
+    -   `select`: Reduce the number of columns
+
+    -   `arrange`: Sort or order the output
+
+-   Deriving information
+
+    -   `mutate`: Create or transform variables
+
+    -   `summarize`: Summarize data down to fewer numbers
+
+    -   `group_by`: Used in conjunction with other verbs to derive information by subsets
+
+Here are some examples of using these verbs with our dataset. Can you tell what each line of code is doing?
+
+```{r practice-wrangling}
+# What are the mean, median, sd, and count for body mass (in pounds) of the
+#  three species of penguins in 2008 in descending order from mean weight?
+
+penguins %>% 
+  filter(year == 2008) %>%
+  mutate(body_mass_lb = body_mass_g*0.0022) %>% 
+  group_by(species) %>% 
+  summarize(mean = mean(body_mass_lb),
+            median = median(body_mass_lb),
+            sd = sd(body_mass_lb),
+            count = n()) %>% 
+  arrange(desc(mean))
+
+# Plot the flipper length and bill length of male penguins over 3000g for
+#  each species
+
+penguins %>% 
+  filter(body_mass_g > 3000 & sex == "male") %>%
+  select(flipper_length_mm, bill_length_mm, species) %>% 
+  ggplot(aes(x = flipper_length_mm, y = bill_length_mm, color = species)) +
+    geom_point(alpha = 0.5) +
+    geom_smooth(method = "lm", se = FALSE) +
+    labs(title = "Scatterplot of flipper and bill length for large male penguins") +
+    xlab("Flipper length (mm)") +
+    ylab("Bill length (mm)")
+```
+
+------------------------------------------------------------------------
+
+## More advanced wrangling
+
+The verbs described above are useful for data that are already complete. However, we often need to merge data tables together or access "hidden" information either in the columns or rows of the data. Let's introduce two more verbs:
+
+-   **joins**: `left_join`, `right_join`, `full_join` and `inner_join` are some of the most common versions, but there are more.
+-   **pivots**: `pivot_longer` and `pivot_wider` will either turn columns into rows or rows into columns.
+
+#### Pivots
+
+Let's imagine that we wanted to explore how weather has impacted the size of penguins. Below we have a (fictional) data table of the average yearly temperature ($^{\circ}F$) on each island for 2007-2010. The problem is that each year has its own column. Instead we want a `year` variable with each temperature in an additional `aveTemp` variable.
+
+```{r weather-data}
+weather <- tribble(
+      ~island, ~"2007", ~"2008", ~"2009", ~"2010",
+     "Biscoe",     -63,     -67,     -58,     -60, 
+  "Torgersen",     -65,     -57,     -68,     -64,
+      "Dream",     -66,     -61,     -65,     -59
+)
+
+weather
+```
+
+Fixing this is just a matter of pivoting the data table so that it is longer where each temperature has its own row, `values_to = "aveTemp"`. We also want to use the column names as a new variable, so `names_to = "year"`.
+
+```{r pivot}
+weather <- weather %>% 
+  pivot_longer(
+    cols = -island, 
+    names_to = "year",
+    values_to = "aveTemp") %>% 
+  mutate(year = as.integer(year))  # make sure year is a numeric value
+
+weather # this looks better
+```
+
+> You can find more information about [pivoting at this link](https://tidyr.tidyverse.org/articles/pivot.html).
+
+#### Joins
+
+Now we are ready to join this weather data table to our original penguins data table. The crucial component is having at least one overlapping variable. In this case, we have two; `island` and `year`. Note that since weather is a shorter data table, the temperature values will be repeated for every penguin species and year combination.
+
+`left_join` and `right_join` mean that we will keep all observations from the left (first) or right (second) data table, regardless of if there is missing information from the other table. For example, notice that in our left join below, the year 2010 is left out because that is not a year value in `penguins`. And in the right join, we include 2010 because it is in `weather` but we get NAs for the other variables.
+
+```{r joins}
+penguins_full <- penguins %>% 
+  left_join(weather, by = c("island", "year"))
+
+# Check the last few rows
+penguins %>% 
+  right_join(weather, by = c("island", "year"))
+
+penguins_full
+```
+
+```{r scatterplot}
+# Can we visualize temperature and average body size
+penguins_full %>% 
+  drop_na(body_mass_g) %>% 
+  group_by(aveTemp, species) %>% 
+  summarize(mean_body_mass = mean(body_mass_g)) %>% 
+  ggplot(aes(x = aveTemp, y = mean_body_mass, color = species)) +
+    geom_point() +
+    geom_line(aes(linetype = species)) +
+    labs(title = "Average body mass by average yearly temperature") +
+    xlab("Average Yearly Temperature (F)") +
+    ylab("Average Body Mass (g)")
+```
+
+> You can find more information about [joins at this link](https://dtplyr.tidyverse.org/reference/left_join.dtplyr_step.html).
+
+------------------------------------------------------------------------
+
+## Inference through Randomization and Simulation
+
+One of the biggest conceptual challenges for teaching inference in an introductory stats class is the idea of theoretical sampling distributions. Students need to know:
+
+-   what the distribution is (Normal, t, F, chi-square...)
+-   how it behaves
+-   how and under what conditions our sample statistic is expected to follow that distribution
+-   then use it to assess the sample data and come to a conclusion about their hypotheses
+
+Setting up all that can (and does) take weeks of class. What if students could perform a hypothesis test just with a sample and some shuffling? Inference using **Randomization and Simulation** allows students to do just that, and it can be done in a class or two!
+
+### The background
+
+All you need is an example to motivate, let's use our penguins. Say we want to know if the average flipper length of Adelie penguins is different for males and females. After a brief introduction into setting up hypotheses, we come to the following competing claims:
+
+-   Null hypothesis: There is no difference in the average flipper length of male and female Adelie penguins.
+
+-   Alternative hypothesis: There is an actual difference in the average flipper length of male and female Adelie penguins.
+
+*\*Feel free to use symbols and letters, but this is a Week 2 or 3 type of activity and we don't want to increase the cognitive load.*
+
+Like any good statistician or data scientist, we want to look at some numerical summaries and visualize the data first.
+
+```{r eda}
+# We'll be using this subset, so save it as a new object called 'adelie'
+adelie <- penguins %>%
+  filter(species == "Adelie") %>% 
+  drop_na(flipper_length_mm, sex)
+
+adelie %>% 
+  ggplot(aes(x = sex, y = flipper_length_mm, fill = sex)) +
+    geom_boxplot() +
+    #geom_violin() +  # try a violin plot
+    geom_jitter(alpha = 0.5, width = 0.01)
+
+adelie %>% 
+  group_by(sex) %>% 
+  summarize(mean = mean(flipper_length_mm),
+            median = median(flipper_length_mm),
+            sd = sd(flipper_length_mm),
+            count = n()
+  )
+```
+
+### Build the sampling distribution
+
+How does it work? First, build a sampling distribution under the null hypothesis, without the help of the central limit theorem. Consider that if the null hypothesis is true, then the sex of the penguin does not matter. We can simulate additional samples by shuffling the flipper length measurements and randomizing sex to each measurement. This way we create a distribution where we know that the two samples are pretty close to being the same because of the shuffling. Here's how we do it in R using the `infer` package.
+
+```{r null-dist}
+library(infer)
+
+null_dist <- adelie %>% 
+  specify(flipper_length_mm ~ sex) %>% 
+  hypothesize(null = "independence") %>% 
+  generate(reps = 500, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("male", "female"))
+
+
+# What happened when we ran that? Maybe we need to visualize things?
+null_dist %>% 
+  visualize()
+```
+
+Let's slow things down and look back at that code: The infer package uses the same four functions for building the null distribution:
+
+-   `specify` to define the variables and their relationship using the `response ~ explanatory` formula notation.
+-   `hypothesize` to declare the null hypothesis
+-   `generate` to create the samples
+-   `calculate` to specify what summary statistics to track
+
+In this example we examine whether the mean flipper length is independent between males and females. We're shuffling the measurements 500 times and permuting (without replacement) the sex of the penguins. For each shuffled sample we calculate the difference between male and female means, in that order.
+
+### Evaluate the real sample
+
+But how does our observed data stack up to the null distribution? Is it unusual in the null distribution? Let's check:
+
+```{r pvalue}
+obs_diff <- 192.4 - 187.8  # from our summary stats earlier
+
+null_dist %>% 
+  visualize() +
+  shade_p_value(obs_stat = obs_diff, direction = "both")
+```
+
+Wow! Our real difference in the sample means seems to be hard to simulate if the null hypothesis is true. And calculating the p-value is as easy as counting how many shuffled sample differences were as extreme as the real difference in means.
+
+```{r}
+null_dist %>%
+  get_p_value(obs_stat = obs_diff, direction = "both")
+```
+
+### More tests
+
+Could we create a bootstrapped confidence interval with methods like this?
+
+What else can you test through randomization and simulation? Check out the helpful vignette by running the code below. See if you can come up with an idea for a test using the penguin data.
+
+```{r more-practice}
+# More information about infer
+vignette("infer")
+
+# A reminder of the penguin data
+penguins
+```
